@@ -6,6 +6,7 @@ public class User {
     private String username;
     private String dateOfCreation;
 
+
     public User(int userId, String username, String dateOfCreation) {
         this.userId = userId;
         this.username = username;

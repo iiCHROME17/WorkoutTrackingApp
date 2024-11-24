@@ -5,15 +5,18 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 public class MainDisplay extends Application {
 
 
-    private UserMenuManager uManager;
+    private UserManager uManager;
     @FXML
     private Label activeUserLabel;
+    @FXML
+    private ImageView activeUserPfp;
 
     /**
      * Constructor for the MainDisplay class
@@ -21,7 +24,7 @@ public class MainDisplay extends Application {
      */
 
     public MainDisplay() {
-        uManager = new UserMenuManager();
+        uManager = new UserManager();
     }
 
     /**
@@ -29,7 +32,8 @@ public class MainDisplay extends Application {
      */
     @FXML
     private void initialize() {
-        uManager.handleLoadUsers(activeUserLabel);
+        uManager.handleLoadUsers();
+        activeUserLabel.setText(uManager.getActiveUser().getUsername());
     }
 
     /**
@@ -41,7 +45,8 @@ public class MainDisplay extends Application {
     }
     @FXML
     private void loadUsersMenu() {
-        uManager.handleLoadUsers(activeUserLabel);
+        uManager.handleLoadUsers();
+        activeUserLabel.setText(uManager.getActiveUser().getUsername());
     }
 
 
@@ -57,7 +62,7 @@ public class MainDisplay extends Application {
     public void start(Stage primaryStage) {
         try {
             // Load the FXML file into an AnchorPane
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/chrome/workouttrackerapp/appLayout.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/chrome/workouttrackerapp/trial/experimental.fxml"));
             AnchorPane root = loader.load();
 
             // Set the title of the window
