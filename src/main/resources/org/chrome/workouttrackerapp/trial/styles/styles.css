@@ -20,6 +20,9 @@
 #activeUserMenuBar .arrow{
     -fx-content-display: none;
 }
+#activeUserProfileImage {
+    -fx-border-radius: 25px;
+}
 #topNavigation, #topTitleBar {
     -fx-background-color: white;
 }

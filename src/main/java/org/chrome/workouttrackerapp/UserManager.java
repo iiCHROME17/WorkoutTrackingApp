@@ -2,6 +2,8 @@ package org.chrome.workouttrackerapp;
 
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +29,15 @@ public class UserManager {
         databaseConnection = new DatabaseConnection();
     }
 
-    public void createNewUser() {
+    /**
+     * Method to create new user from input dialog
+     * Get Date in YYYY-MM-DD format
+     * Get Image Path
+     * return  true if user is created
+     * return false if user is not created
+     */
+
+    public boolean createNewUser() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Create New User");
         dialog.setHeaderText("Enter a username to create a new user");
@@ -37,24 +47,54 @@ public class UserManager {
         LocalDate date = LocalDate.now();
         String currentDate = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-        // User input
-        dialog.showAndWait().ifPresent(username -> {
-            User newUser = new User(1, username, currentDate);
-            System.out.println("User created: " + newUser);
-            // Add the user to the database
-            addUserToDatabase(newUser);
-        });
+        // Display the dialog and handle the input
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent() && !result.get().trim().isEmpty()) {
+            String username = result.get().trim();
 
+            // Let the user choose an image
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose an Image");
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg"));
 
+            Stage stage = new Stage();
+            File selectedFile = fileChooser.showOpenDialog(stage);
+
+            if (selectedFile != null) {
+                String imagePath = selectedFile.getAbsolutePath();
+
+                // Create a new user
+                User newUser = new User(1, username, currentDate, imagePath);
+                System.out.println("User created: " + newUser);
+
+                // Add the user to the database
+                addUserToDatabase(newUser);
+
+                // Load this user as the active user
+                setActiveUser(newUser);
+
+                // Return true since the user was successfully created
+                return true;
+            } else {
+                System.out.println("No image selected. User creation aborted.");
+            }
+        } else {
+            System.out.println("No username provided. User creation aborted.");
+        }
+
+        // Return false if the user creation failed
+        return false;
     }
 
     public void addUserToDatabase(User user) {
-        String sqlCode = "INSERT INTO Users(username, date_of_creation) VALUES(?, ?)";
+        String sqlCode = "INSERT INTO Users(username, date_of_creation,image_path) VALUES(?, ?, ?)";
         try (Connection connection = databaseConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlCode)) {
 
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getDateOfCreation());
+            preparedStatement.setString(3, user.getImagePath());
 
             preparedStatement.executeUpdate();
             System.out.println("User added to the database successfully.");
@@ -70,7 +110,7 @@ public class UserManager {
 
     public List<User> getUsers() {
         List<User> users = new ArrayList<>();
-        String sqlQuery = "SELECT user_id, username, date_of_creation FROM Users";
+        String sqlQuery = "SELECT user_id, username, date_of_creation,image_path FROM Users";
 
         try (Connection connection = databaseConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
@@ -81,9 +121,10 @@ public class UserManager {
                 int id = resultSet.getInt("user_id");
                 String username = resultSet.getString("username");
                 String dateOfCreation = resultSet.getString("date_of_creation");
+                String imagePath = resultSet.getString("image_path");
 
                 // Create a User object and add it to the list
-                User user = new User(id, username, dateOfCreation);
+                User user = new User(id, username, dateOfCreation,imagePath);
                 users.add(user);
             }
 
@@ -163,6 +204,8 @@ public class UserManager {
             alert.showAndWait();
         }
     }
+
+
 }
 
 class DatabaseConnection {

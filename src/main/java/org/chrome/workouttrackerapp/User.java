@@ -5,12 +5,14 @@ public class User {
     private int userId;
     private String username;
     private String dateOfCreation;
+    private String imagePath;
 
 
-    public User(int userId, String username, String dateOfCreation) {
+    public User(int userId, String username, String dateOfCreation, String imagePath) {
         this.userId = userId;
         this.username = username;
         this.dateOfCreation = dateOfCreation;
+        this.imagePath = imagePath;
     }
 
     // Getters and setters
@@ -25,6 +27,10 @@ public class User {
     public String getDateOfCreation() {
         return dateOfCreation;
     }
+    public String getImagePath() {
+        return imagePath;
+    }
+
 
     @Override
     public String toString() {
@@ -32,6 +38,7 @@ public class User {
                 "userId=" + userId +
                 ", username='" + username + '\'' +
                 ", dateOfCreation='" + dateOfCreation + '\'' +
+                ", imagePath='" + imagePath + '\'' +
                 '}';
     }
 }
