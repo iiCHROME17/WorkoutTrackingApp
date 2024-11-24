@@ -1,6 +1,8 @@
 .root {
     -fx-background-color: #f0f0f0;
     -fx-text-fill: white;
+    -fx-font-family: Roboto;
+    -fx-font-size: 20px ;
 }
 
 #VboxlLeftButton {
@@ -77,4 +79,12 @@
     -fx-background-color: white;
     -fx-border-color: #ddd;
     -fx-border-radius: 10px;
+}
+#dashboardInfoBox
+{
+    -fx-background-color: #efefef;
+    -fx-border-color: #ddd;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 0);
+    -fx-border-radius: 10px;
+    -fx-padding: 10px;
 }

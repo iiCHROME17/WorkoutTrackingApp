@@ -19,14 +19,16 @@ import java.util.Optional;
 public class UserManager {
 
     private DatabaseConnection databaseConnection;
+    private AlertDisplay alertDisplay;
     private User activeUser;
 
     public User getActiveUser() {
         return activeUser;
     }
 
-    public UserManager() {
-        databaseConnection = new DatabaseConnection();
+    public UserManager(DatabaseConnection databaseConnection) {
+        this.databaseConnection = databaseConnection;
+        alertDisplay = new AlertDisplay();
     }
 
     /**
@@ -139,7 +141,7 @@ public class UserManager {
      *
      */
 
-    public void handleLoadUsers() {
+    public int handleLoadUsers() {
         List<User> users = getUsers();
 
         // Create a list of usernames for the choice dialog
@@ -173,8 +175,11 @@ public class UserManager {
 
                 System.out.println("Selected User: " + selectedUser);
                 setActiveUser(selectedUser);
+
             }
+
         });
+        return getActiveUser().getUserId();
     }
 
     /**
@@ -204,32 +209,133 @@ public class UserManager {
             alert.showAndWait();
         }
     }
+    /**
+     * Method to take in int id and load user from database
+     * @param id the id of the user to load
+     *
+     */
+    public User loadUser(int id) {
+        //For each user in the list of users, check if the user id matches the id passed in
+        List<User> users = getUsers();
+        User selectedUser = users.stream()
+                .filter(user -> user.getUserId() == id)
+                .findFirst()
+                .orElse(null);
+        //if one has been found, set the active user to the selected user
+        if (selectedUser != null) {
+            setActiveUser(selectedUser);
+            System.out.println("User loaded: " + selectedUser);
+            return selectedUser;
+        } else {
+            System.out.println("User not found.");
+        }
+        return null;
+    }
 
+    /**
+     * Method to update the record of a user in a database,
+     * only the username and image path can be updated
+     * Create a window that takes in a new username and a button to open file chooser
+     * Update the user record in the database
+     *
+     */
 
-}
+    public void updateUser() {
+        // 1. Load all users
+        List<User> users = getUsers(); // This should return a list of User objects from your database or list
 
-class DatabaseConnection {
+        // 2. Create a list of usernames for the choice dialog
+        List<String> usernames = users.stream()
+                .map(User::getUsername)
+                .toList();
 
-    public Connection getConnection() throws SQLException {
-        try {
-            // Load SQLite JDBC driver
-            Class.forName("org.sqlite.JDBC");
+        // 3. Create a ChoiceDialog for selecting a user
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(null, usernames);
+        dialog.setTitle("Select User");
+        dialog.setHeaderText("Choose a user to load:");
+        dialog.setContentText("Username:");
 
-            // Get the database file from resources
-            URL url = getClass().getResource("/org/chrome/workouttrackerapp/gymProg.db");
+        // 4. Show the dialog and handle user selection
+        Optional<String> result = dialog.showAndWait();
 
-            if (url == null) {
-                throw new IOException("Database file not found in resources.");
+        // If a user was selected, proceed with updating
+        result.ifPresent(selectedUsername -> {
+            // Find the user object corresponding to the selected username
+            User selectedUser = users.stream()
+                    .filter(user -> user.getUsername().equals(selectedUsername))
+                    .findFirst()
+                    .orElse(null);
+
+            if (selectedUser != null) {
+                // 5. Create a dialog for updating the username
+                TextInputDialog updateDialog = new TextInputDialog(selectedUser.getUsername());
+                updateDialog.setTitle("Update User");
+                updateDialog.setHeaderText("Enter a new username to update the user");
+                updateDialog.setContentText("New Username:");
+
+                // Show the dialog and get the new username
+                Optional<String> newUsernameResult = updateDialog.showAndWait();
+
+                newUsernameResult.ifPresent(newUsername -> {
+                    // 6. Create a FileChooser for selecting an image
+                    FileChooser fileChooser = new FileChooser();
+                    fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.jpg", "*.png", "*.jpeg"));
+
+                    // Show the file chooser to select a new image
+                    File selectedImageFile = fileChooser.showOpenDialog(new Stage());
+
+                    if (selectedImageFile != null) {
+                        // Get the image file path
+                        String newImagePath = selectedImageFile.getAbsolutePath();
+
+                        // 7. Update the user object with the new username and image path
+                        selectedUser.setUsername(newUsername);
+                        selectedUser.setImagePath(newImagePath);
+
+                        // 8. Save the updated user to the database (simulated here)
+                        updateUserInDatabase(selectedUser);
+
+                        // Show confirmation dialog
+                        alertDisplay.showAlert(Alert.AlertType.CONFIRMATION, "User Updated", "User has been updated successfully.");
+
+                    }
+                    else {
+                        // Continue with original image, new username
+                        selectedUser.setUsername(newUsername);
+                        updateUserInDatabase(selectedUser);
+                        alertDisplay.showAlert(Alert.AlertType.CONFIRMATION, "User Updated", "User has been updated successfully, Old image remains.");
+
+                    }
+                });
             }
+        });
+    }
 
-            // Convert the URL to a URI, then to a File object
-            File databaseFile = new File(url.toURI());
+    /**
+     * Method to update the user in the database
+     *
+     * @param user
+     */
+    private void updateUserInDatabase(User user) {
+        String sqlUpdate = "UPDATE Users SET username = ?, image_path = ? WHERE user_id = ?";
+        try (Connection connection = databaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sqlUpdate)) {
 
-            // Get the connection to the database
-            return DriverManager.getConnection("jdbc:sqlite:" + databaseFile.getAbsolutePath());
+            preparedStatement.setString(1, user.getUsername());
+            preparedStatement.setString(2, user.getImagePath());
+            preparedStatement.setInt(3, user.getUserId());
 
-        } catch (ClassNotFoundException | SQLException | IOException | URISyntaxException e) {
-            throw new SQLException("Failed to connect to the database", e);
+            preparedStatement.executeUpdate();
+            System.out.println("User updated: " + user);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
+
+
+
+
 }
+
+

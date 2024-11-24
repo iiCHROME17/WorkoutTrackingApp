@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -22,11 +23,31 @@ public class MainDisplay extends Application {
 
 
     private UserManager uManager;
+    private int currentUserId;
     private ProfileImageManager pfpManager;
+    private AlertDisplay alertDisplay;
+    private DashboardManager dashboardManager;
+    private DatabaseConnection databaseConnection;
+
     @FXML
     private Label activeUserLabel;
     @FXML
     private ImageView activeUserPfp;
+    @FXML
+    private ScrollPane dashboardPane;
+
+    //Dashboard FXML
+    @FXML
+    private Label totWorkoutsLabel;
+    @FXML
+    private Label totExcercisesLabel;
+    @FXML
+    private Label timeSpentLabel;
+    @FXML
+    private Label avgDurationLabel;
+    @FXML
+    private Label workoutsPwLabel;
+
 
     /**
      * Constructor for the MainDisplay class
@@ -35,8 +56,11 @@ public class MainDisplay extends Application {
 
     public MainDisplay() {
 
-        uManager = new UserManager();
+        databaseConnection = new DatabaseConnection();
+        uManager = new UserManager(databaseConnection);
         pfpManager = new ProfileImageManager();
+        alertDisplay = new AlertDisplay();
+        dashboardManager = new DashboardManager(databaseConnection);
 
     }
 
@@ -45,7 +69,8 @@ public class MainDisplay extends Application {
      */
     @FXML
     private void initialize() {
-        uManager.handleLoadUsers();
+        currentUserId = uManager.handleLoadUsers();
+        refreshDashboard(uManager.getActiveUser());
 
         activeUserLabel.setText(uManager.getActiveUser().getUsername());
         pfpManager.updateProfileImage(uManager, activeUserPfp);
@@ -58,18 +83,52 @@ public class MainDisplay extends Application {
     @FXML
     private void createNewUser() {
        if(uManager.createNewUser()) {
-           showAlert(Alert.AlertType.INFORMATION, "User Created", "User has been created successfully.");
+           alertDisplay.showAlert(Alert.AlertType.INFORMATION, "User Created", "User has been created successfully.");
            activeUserLabel.setText(uManager.getActiveUser().getUsername());
            pfpManager.updateProfileImage(uManager, activeUserPfp);
        } else {
-           showAlert(Alert.AlertType.ERROR, "Error", "User could not be created.");
+           alertDisplay.showAlert(Alert.AlertType.ERROR, "Error", "User could not be created.");
        }
     }
+
+    /**
+     * Method to load the users menu
+     */
     @FXML
     private void loadUsersMenu() {
-        uManager.handleLoadUsers();
+        currentUserId = uManager.handleLoadUsers();
         activeUserLabel.setText(uManager.getActiveUser().getUsername());
         pfpManager.updateProfileImage(uManager, activeUserPfp);
+    }
+
+    /**
+     * Method to update the record of the user
+     */
+    @FXML
+    private void updateRecord(){
+        uManager.updateUser();
+        uManager.loadUser(currentUserId);
+        activeUserLabel.setText(uManager.getActiveUser().getUsername());
+        pfpManager.updateProfileImage(uManager, activeUserPfp);
+
+    }
+    @FXML
+    private void dashboardSelected(){
+        dashboardPane.visibleProperty().setValue(true);
+        dashboardPane.disabledProperty().equals(false);
+
+        User activeUser = uManager.getActiveUser();
+        refreshDashboard(activeUser);
+    }
+    /**
+     * Method to refresh the dashboard
+     */
+    public void refreshDashboard(User activeUser) {
+        dashboardManager.calcTotalWorkouts(totWorkoutsLabel);
+        dashboardManager.calcTotalExercises(totExcercisesLabel);
+        dashboardManager.calcTimeSpent(timeSpentLabel);
+        dashboardManager.calcAvgDuration(avgDurationLabel);
+        dashboardManager.calcWeeklyWorkouts(workoutsPwLabel);
     }
 
     /**
@@ -129,6 +188,36 @@ public class MainDisplay extends Application {
         }
     }
 
+    /**
+     * Method to refresh the Profile Data
+     */
+    public void refreshUser() {
+        // 1. Reload the updated user data from the database or data source
+        List<User> users = uManager.getUsers(); // This should return the updated list of users from your database
+        User activeUser = uManager.getActiveUser(); // You may already have a reference to the active user
+
+        // 2. Find the updated user in the list
+        User updatedUser = users.stream()
+                .filter(user -> user.getUsername().equals(activeUser.getUsername()))
+                .findFirst()
+                .orElse(null);
+
+        // 3. If the user exists, update the UI components
+        if (updatedUser != null) {
+            // Update the username
+            activeUserLabel.setText(updatedUser.getUsername());
+
+            // Update the profile image
+            String newImagePath = updatedUser.getImagePath();
+            if (newImagePath != null && !newImagePath.isEmpty()) {
+                Image profileImage = new Image("file:" + newImagePath); // Assuming the image is stored locally
+                activeUserPfp.setImage(profileImage);
+            }
+        } else {
+            System.out.println("User not found.");
+        }
+    }
+
 
     /**
      *
@@ -161,18 +250,7 @@ public class MainDisplay extends Application {
         }
     }
 
-    /**
-     * Method to Show Alert Dialog
-     * @param alertType the type of alert
-     *@param title the title of the alert
-     * @param message the message to display
-     */
-    public void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(message);
-        alert.showAndWait();
-    }
+
 
 
     public static void main(String[] args) {

@@ -23,12 +23,18 @@ public class User {
     public String getUsername() {
         return username;
     }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public String getDateOfCreation() {
         return dateOfCreation;
     }
     public String getImagePath() {
         return imagePath;
+    }
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
 
