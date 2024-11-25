@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
-    // The absolute path to the database file
+    // The absolute path to the database file (Currently The actual path)
     private static final String DATABASE_FILE_PATH = "D:\\Programming\\Java\\Projects\\WorkoutTrackerApp\\src\\main\\resources\\org\\chrome\\workouttrackerapp\\gymProg.db";
 
     // Static variable to hold the single connection instance
