@@ -18,7 +18,7 @@ import java.util.Optional;
 
 public class UserManager {
 
-    private DatabaseConnection databaseConnection;
+    private final DatabaseConnection databaseConnection;
     private AlertDisplay alertDisplay;
     private User activeUser;
 
@@ -39,7 +39,7 @@ public class UserManager {
      * return false if user is not created
      */
 
-    public boolean createNewUser() {
+    public boolean createNewUser() throws SQLException {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Create New User");
         dialog.setHeaderText("Enter a username to create a new user");
@@ -72,6 +72,7 @@ public class UserManager {
 
                 // Add the user to the database
                 addUserToDatabase(newUser);
+                //addUserToDatabase(newUser);
 
                 // Load this user as the active user
                 setActiveUser(newUser);
@@ -91,7 +92,7 @@ public class UserManager {
 
     public void addUserToDatabase(User user) {
         String sqlCode = "INSERT INTO Users(username, date_of_creation,image_path) VALUES(?, ?, ?)";
-        try (Connection connection = databaseConnection.getConnection();
+        try (Connection connection = databaseConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlCode)) {
 
             preparedStatement.setString(1, user.getUsername());
@@ -114,7 +115,7 @@ public class UserManager {
         List<User> users = new ArrayList<>();
         String sqlQuery = "SELECT user_id, username, date_of_creation,image_path FROM Users";
 
-        try (Connection connection = databaseConnection.getConnection();
+        try (Connection connection = databaseConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
@@ -133,7 +134,7 @@ public class UserManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
+        databaseConnection.closeConnection();
         return users;
     }
     /**
@@ -141,7 +142,7 @@ public class UserManager {
      *
      */
 
-    public int handleLoadUsers() {
+    public int handleLoadUsers() throws SQLException {
         List<User> users = getUsers();
 
         // Create a list of usernames for the choice dialog
@@ -167,11 +168,8 @@ public class UserManager {
             if (selectedUser != null) {
 
                 // Set up a button to delete the selected user
-                Button deleteButton = new Button("Delete User");
-                deleteButton.setOnAction(e -> deleteUser(selectedUser));
-
-                // You can now add hBox to your layout, e.g., some parent layout in your JavaFX scene
-                // For example, in a controller or main method, use: someParentLayout.getChildren().add(hBox);
+                //Button deleteButton = new Button("Delete User");
+               // deleteButton.setOnAction(e -> deleteUser(selectedUser));
 
                 System.out.println("Selected User: " + selectedUser);
                 setActiveUser(selectedUser);
@@ -189,7 +187,7 @@ public class UserManager {
 
     private void deleteUser(User user) {
         String sqlDelete = "DELETE FROM Users WHERE user_id = ?";
-        try (Connection connection = databaseConnection.getConnection();
+        try (Connection connection = databaseConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlDelete)) {
 
             preparedStatement.setInt(1, user.getUserId());
@@ -208,13 +206,15 @@ public class UserManager {
             alert.setHeaderText("Failed to delete user.");
             alert.showAndWait();
         }
+
+        databaseConnection.closeConnection();
     }
     /**
      * Method to take in int id and load user from database
      * @param id the id of the user to load
      *
      */
-    public User loadUser(int id) {
+    public User loadUser(int id) throws SQLException {
         //For each user in the list of users, check if the user id matches the id passed in
         List<User> users = getUsers();
         User selectedUser = users.stream()
@@ -240,7 +240,7 @@ public class UserManager {
      *
      */
 
-    public void updateUser() {
+    public void updateUser () throws SQLException {
         // 1. Load all users
         List<User> users = getUsers(); // This should return a list of User objects from your database or list
 
@@ -318,7 +318,7 @@ public class UserManager {
      */
     private void updateUserInDatabase(User user) {
         String sqlUpdate = "UPDATE Users SET username = ?, image_path = ? WHERE user_id = ?";
-        try (Connection connection = databaseConnection.getConnection();
+        try (Connection connection = databaseConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlUpdate)) {
 
             preparedStatement.setString(1, user.getUsername());
@@ -331,6 +331,7 @@ public class UserManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        databaseConnection.closeConnection();
     }
 
 

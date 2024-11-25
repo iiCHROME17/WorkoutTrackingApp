@@ -1,35 +1,53 @@
 package org.chrome.workouttrackerapp;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
 
-    public Connection getConnection() throws SQLException {
+    // The absolute path to the database file
+    private static final String DATABASE_FILE_PATH = "D:\\Programming\\Java\\Projects\\WorkoutTrackerApp\\src\\main\\resources\\org\\chrome\\workouttrackerapp\\gymProg.db";
+
+    // Static variable to hold the single connection instance
+    private static Connection connection;
+
+    // Method to establish a connection to the database
+    public static Connection connect() {
+        if (connection != null) {
+            // Return the existing connection if already established
+            return connection;
+        }
+
         try {
-            // Load SQLite JDBC driver
-            Class.forName("org.sqlite.JDBC");
+            // Log the path of the database being accessed
+            System.out.println("Accessing database from path: " + DATABASE_FILE_PATH);
 
-            // Get the database file from resources
-            URL url = getClass().getResource("/org/chrome/workouttrackerapp/gymProg.db");
+            // Establish connection to the SQLite database using the absolute path
+            String databaseUrl = "jdbc:sqlite:" + DATABASE_FILE_PATH;
+            connection = DriverManager.getConnection(databaseUrl);
 
-            if (url == null) {
-                throw new IOException("Database file not found in resources.");
+            // Check if the connection was successful
+            if (connection != null) {
+                System.out.println("Connection to the database established successfully.");
             }
+        } catch (SQLException e) {
+            System.err.println("Error occurred while connecting to the database: " + e.getMessage());
+        }
 
-            // Convert the URL to a URI, then to a File object
-            File databaseFile = new File(url.toURI());
+        return connection;
+    }
 
-            // Get the connection to the database
-            return DriverManager.getConnection("jdbc:sqlite:" + databaseFile.getAbsolutePath());
-
-        } catch (ClassNotFoundException | SQLException | IOException | URISyntaxException e) {
-            throw new SQLException("Failed to connect to the database", e);
+    // Method to close the connection
+    public static void closeConnection() {
+        if (connection != null) {
+            try {
+                connection.close();
+                connection = null; // Set connection to null after closing
+                System.out.println("Connection closed.");
+            } catch (SQLException e) {
+                System.err.println("Error occurred while closing the connection: " + e.getMessage());
+            }
         }
     }
 }
