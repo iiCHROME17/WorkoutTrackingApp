@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
@@ -47,6 +48,10 @@ public class MainDisplay extends Application {
     private Label avgDurationLabel;
     @FXML
     private Label workoutsPwLabel;
+    @FXML
+    private Button startNewWorkout;
+    @FXML
+    private Button createPreset;
 
     // No-argument constructor required by FXML
     public MainDisplay() {
@@ -186,6 +191,22 @@ public class MainDisplay extends Application {
         }
     }
 
+    @FXML
+    private void startNewWorkout(){
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/chrome/workouttrackerapp/trial/WorkoutWindow.fxml"));
+            Stage workoutStage = new Stage();
+            workoutStage.setTitle("New Workout");
+            AnchorPane root = loader.load();
+
+            Scene scene = new Scene(root, 600, 400);
+            workoutStage.setScene(scene);
+            workoutStage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -244,6 +265,8 @@ class ProfileImageManager {
             System.out.println("Error updating profile image.");
         }
     }
+
+
 
     // Method to clean up volatile files
     public void cleanUpVolatileFiles() {

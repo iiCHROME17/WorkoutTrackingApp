@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/23.0.1" fx:controller="org.chrome.workouttrackerapp.WorkoutWindowController">
+    <children>
+        <VBox alignment="TOP_CENTER" spacing="10" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+            <!-- Workout Title -->
+            <TextField fx:id="workoutNameField" promptText="Workout Name" />
+
+            <!-- Exercise List with ScrollPane -->
+            <ScrollPane fx:id="exerciseScrollPane" fitToWidth="true" maxHeight="300" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0">
+                <VBox fx:id="exerciseList" spacing="10">
+                    <!-- Dynamic content will go here -->
+                </VBox>
+            </ScrollPane>
+
+            <!-- Add Buttons -->
+            <HBox alignment="CENTER" spacing="10">
+                <Button onAction="#addNewExercise" text="Add New Exercise" />
+            </HBox>
+        </VBox>
+    </children>
+</AnchorPane>
